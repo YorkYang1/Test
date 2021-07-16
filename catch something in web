@@ -1,0 +1,76 @@
+import re //正则
+import requests //requests组件
+from bs4 import BeautifulSoup //BeautifulSoup方法
+import pandas as pd //pandas
+
+def get_movies(link):
+  headers={xxx} //请求头
+  movie_names=[] //名字
+  movie_types=[] //类型
+  movie_dis=[] //评价人数
+  movie_grade=[] //评分 
+  movie_addrs=[] //地区
+  movie_actor=[] //主演
+  movie_year=[] //年份
+  movie_directors=[] //导演
+  
+  r=requests.get(link, headers=headers, timeout=10) //发起请求，得到数据
+  soup = BeautifulSoup(r.txt,"lxml") //用soup解析数据
+  
+  for each in soup.find_all('div', class_='abstract') //遍历每个div标签中的abstract属性
+    a=each.text
+    
+    tp = re.search(r'类型:(.*)',a) //匹配“类型：”后面的字符
+    if tp==None：
+      movie_types.append("")
+    else:
+      movie_types.append(tp.group(1))
+      
+    actor = re.search(r'主演:(.*)',a) //匹配“主演：”后面的字符
+    if actor==None：
+      movie_actor.append("")
+    else:
+      movie_actor.append(actor.group(1))
+      
+    director = re.search(r'导演:(.*)',a) //匹配“导演：”后面的字符
+    if director==None：
+      movie_directors.append("")
+    else:
+      movie_directors.append(director.group(1))  
+      
+    addr = re.search(r'制片国家/地区:(.*)',a) //匹配“制片国家/地区：”后面的字符
+    if addr==None：
+      movie_addrs.append("")
+    else:
+      movie_addrs.append(addr.group(1))
+      
+    year = re.search(r'年份:(.*)',a) //匹配“年份：”后面的字符
+    if year==None：
+      movie_year.append("")
+    else:
+      year_str=year.group(1)
+      sj=int(year_str[:2])+1 //截前3位转义+1
+      nd=year_str[2]+'0'
+      movie_year.append(str(sj)+'世纪'+nd+'年代')
+      //movie_year.append(year.group(1))
+      
+      div_list=soup.find_all(div,class_='title')
+      for each in div_list:
+        movie_name=each.a.text.strip()
+        movie_names.append(movie_name)
+      for each in soup.find_all('div',class_='rating'):
+        a=each.text.split('\n')
+        x=re.sub("\D",a[3])
+        movie_dis.append(int(x))
+        movie_grade.append(float(a[2]))
+      return movie_names,movie_types,movie_dis,movie_grade,movie_addr,movie_actors,movie_director,movie_year
+      
+      url=xxxx //webaddr
+      movies=get_movies(url)
+      movies_1=pd.DataFrame({'电影名称':movies[0],'电影类型':movies[1],'导演':movies[6],'主演':movies[5],'评价人数':movies[2],'评分':movies[3],'国家/地区':movies[4],'年代':movies[7]})
+      for i in range(1,18): //总共18页，一页25个
+        link="https://www.douban.com/doulist/240962/?start="+str(i*25)
+        movies=get_movies(link)
+        movies_1=movies_1.append(pd.DataFrame({'电影名称':movies[0],'电影类型':movies[1],'导演':movies[6],'主演':movies[5],'评价人数':movies[2],'评分':movies[3],'国家/地区':movies[4],'年代':movies[7]}),ignore_index=True)
+      all_movies=movies_1
+      
